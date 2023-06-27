@@ -27,5 +27,5 @@ outputs:
   RESOURCE_NAME:
     description: 'Component resource name output'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
