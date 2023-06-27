@@ -20,6 +20,9 @@ inputs:
   additional-vars:
     description: 'Extra vars required by the ansible playbook'
     required: false
+  scm-branch:
+    description: 'Extra vars required by the ansible playbook'
+    required: false
 outputs:
   RESOURCE_NAME:
     description: 'Component resource name output'

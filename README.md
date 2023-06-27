@@ -13,6 +13,7 @@ with:
   ansible-tower-pass: ${{ secrets.ansiblePass }}
   ansible-tower-url: ${{ secrets.ansibleUrl }}
   template-id: "1254"
+  scm-branch: "example-branch"
   additional-vars: |
   {
       "example_aws_environment": "dev",

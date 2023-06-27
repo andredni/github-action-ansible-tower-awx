@@ -21,6 +21,7 @@ async function getRequestData() {
   const additionalVars = JSON.parse(core.getInput('additional-vars'));
   const templateId: string = core.getInput('template-id');
   const certPath: string = core.getInput('certificate-path');
+  const scmBranch: string = core.getInput('scm-branch') ?? "";
   let certBase64 = '';
   const requestData: any = { extraVars: {}, templateId };
 
@@ -29,6 +30,8 @@ async function getRequestData() {
   if (certPath) {
     certBase64 = await base64Encode(certPath);
   }
+
+  requestData.extraVars.scm_branch = scmBranch;
 
   requestData.baseRequest = request.defaults({
     baseUrl: url,
@@ -64,12 +67,11 @@ async function launchJob(requestData: any) {
   console.log(`Launching Template ID: ${requestData.templateId}`);
 
   const options = {
-    method: 'POST',
     url: `api/v2/job_templates/${requestData.templateId}/launch/`,
     body: requestData.extraVars,
   };
 
-  const response = await requestData.baseRequest(options);
+  const response = await requestData.baseRequest.post(options);
 
   if (response && response.job) {
     console.log(`Template Id ${requestData.templateId} launched successfully.`);
@@ -90,10 +92,9 @@ async function launchJob(requestData: any) {
 async function getFinalStatus(requestData: any, jobUrl: string) {
   const options = {
     url: jobUrl,
-    method: 'GET',
   };
 
-  let response = await requestData.baseRequest(options);
+  let response = await requestData.baseRequest.get(options);
 
   if (response && response.status) {
     if (!(response.status === 'failed') && !(response.status === 'successful') && !(response.status === 'error')) {
@@ -117,11 +118,10 @@ async function getFinalStatus(requestData: any, jobUrl: string) {
 async function printAnsibleOutput(requestData: any, jobData: any) {
   const options = {
     url: `${jobData.related.stdout}?format=txt`,
-    method: 'GET',
     json: false,
   };
 
-  const response = await requestData.baseRequest(options);
+  const response = await requestData.baseRequest.get(options);
 
   if (jobData.status === 'failed' && response) {
     console.log(`Final status: ${jobData.status}`);
@@ -167,12 +167,15 @@ async function run() {
     const jobData = await getFinalStatus(requestData, jobUrl);
     const output = await printAnsibleOutput(requestData, jobData);
     await exportResourceName(output);
-  } catch (err) {
-    if (err instanceof SyntaxError) {
-      console.log(err.message);
+  } catch (error) {
+    console.log(error);
+
+    if (error instanceof SyntaxError) {
+      console.log(error.message);
       core.setFailed('Extra vars invalid format, please provide a valid JSON.');
     } else {
-      core.setFailed(err.message);
+      ;
+      core.setFailed("error");
     }
   }
 }
